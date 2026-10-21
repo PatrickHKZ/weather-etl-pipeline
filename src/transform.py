@@ -15,6 +15,9 @@ try:
     with open(latest_file,"r") as file:
         data=json.load(file)
 
+    if "current" not in data:
+        raise ValueError("La respuesta no contiene datos actuales del clima")
+
     current=data["current"]
     utc_time = datetime.fromisoformat(current["time"])
     utc_time = utc_time.replace(tzinfo=ZoneInfo("UTC"))

@@ -11,7 +11,7 @@ RAW_DIR.mkdir(parents=True,exist_ok=True)
 URL = "https://api.open-meteo.com/v1/forecast?latitude=-33.45&longitude=-70.66&current=temperature_2m,relative_humidity_2m,wind_speed_10m"
 
 try:
-    response = requests.get(URL)
+    response = requests.get(URL, timeout=10)
     response.raise_for_status()
 
 except Exception as error:
