@@ -1,12 +1,17 @@
-print("Iniciando pipeline ETL")
+from logger import logger
 
-print("Ejecutando extracción")
+
+logger.info("========== INICIO PIPELINE ETL ==========")
+logger.info("Ejecutando extracción")
 import extract
 
-print("Ejecutando transformación")
+logger.info("Ejecutando transformación")
 import transform
 
-print("Ejecutando carga")
+logger.info("Ejecutando carga")
 import load
 
-print("Pipeline finalizado correctamente")
+logger.info("Pipeline finalizado correctamente")
+
+
+logger.info("========== PIPELINE FINALIZADO ==========")

@@ -4,6 +4,7 @@ import os
 
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
+from logger import logger
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -35,12 +36,15 @@ VALUES (
     :velocidadViento
 )
 """
+try:
+    with engine.connect() as connection:
+        connection.execute(
+            text(query),
+            weather
+        )
+        connection.commit()
+except Exception as error:
+    logger.error(f"Error cargando datos en PostgreSQL: {error}")
+    raise
 
-with engine.connect() as connection:
-    connection.execute(
-        text(query),
-        weather
-    )
-    connection.commit()
-
-print("Datos cargados correctamente en PostgreSQL")
+logger.info("Datos cargados correctamente en PostgreSQL")
