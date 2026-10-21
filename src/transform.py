@@ -1,5 +1,7 @@
 import json
 from pathlib import Path
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 BASE_DIR=Path(__file__).resolve().parent.parent
 RAW_DIR=BASE_DIR/"data"/"raw"
@@ -12,13 +14,18 @@ with open(latest_file,"r") as file:
     data=json.load(file)
 
 current=data["current"]
+utc_time = datetime.fromisoformat(current["time"])
+utc_time = utc_time.replace(tzinfo=ZoneInfo("UTC"))
+chile_time = utc_time.astimezone(
+    ZoneInfo("America/Santiago")
+)
 
 transformed_data={
-    "city":"Santiago",
-    "timestamp": current["time"],
-    "temperature": current["temperature_2m"],
-    "humidity":current["relative_humidity_2m"],
-    "wind_speed": current["wind_speed_10m"]   
+    "ciudad":"Santiago",
+    "fechaHora": chile_time.strftime("%Y-%m-%d %H:%M:%S"),
+    "temperatura": current["temperature_2m"],
+    "humedad":current["relative_humidity_2m"],
+    "velocidadViento": current["wind_speed_10m"]   
 }
 
 output_file=PROCESSED_DIR/"weather_processed.json"
