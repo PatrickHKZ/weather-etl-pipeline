@@ -1,20 +1,27 @@
 from logger import logger
 
+from extract import extract
+from transform import transform
+from load import load
+
+
 try:
+
     logger.info("========== INICIO PIPELINE ETL ==========")
+
     logger.info("Ejecutando extracción")
-    import extract
+    extract()
 
     logger.info("Ejecutando transformación")
-    import transform
+    transform()
 
     logger.info("Ejecutando carga")
-    import load
-
-    logger.info("Pipeline finalizado correctamente")
-
+    load()
 
     logger.info("========== PIPELINE FINALIZADO ==========")
+
+
 except Exception as error:
+
     logger.error(f"Pipeline detenido por error: {error}")
     raise

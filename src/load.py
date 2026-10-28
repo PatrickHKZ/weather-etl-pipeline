@@ -4,69 +4,94 @@ import os
 
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
+
 from logger import logger
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-PROCESSED_FILE = BASE_DIR / "data" / "processed" / "weather_processed.json"
+PROCESSED_FILE = (
+    BASE_DIR /
+    "data" /
+    "processed" /
+    "weather_processed.json"
+)
 
 
-try:
+def load():
 
-    load_dotenv()
+    try:
 
-    DATABASE_URL = os.getenv("DATABASE_URL")
-
-    if not DATABASE_URL:
-        raise ValueError("DATABASE_URL no encontrada en .env")
+        load_dotenv()
 
 
-    engine = create_engine(DATABASE_URL)
-
-
-    with open(PROCESSED_FILE, "r") as file:
-        weather = json.load(file)
-
-
-    if not weather:
-        raise ValueError("El archivo procesado está vacío")
-
-
-    query = """
-    INSERT INTO weather_data (
-        ciudad,
-        fechaHora,
-        temperatura,
-        humedad,
-        velocidadViento
-    )
-    VALUES (
-        :ciudad,
-        :fechaHora,
-        :temperatura,
-        :humedad,
-        :velocidadViento
-    )
-    """
-
-
-    with engine.connect() as connection:
-
-        connection.execute(
-            text(query),
-            weather
+        DATABASE_URL = os.getenv(
+            "DATABASE_URL"
         )
 
-        connection.commit()
+
+        if not DATABASE_URL:
+            raise ValueError(
+                "DATABASE_URL no encontrada"
+            )
 
 
-    logger.info("Datos cargados correctamente en PostgreSQL")
+        engine = create_engine(
+            DATABASE_URL
+        )
 
 
+        with open(
+            PROCESSED_FILE,
+            "r"
+        ) as file:
+
+            weather = json.load(file)
 
 
-except Exception as error:
+        if not weather:
+            raise ValueError(
+                "El archivo procesado está vacío"
+            )
 
-    logger.error(f"Error cargando datos en PostgreSQL: {error}")
-    raise
+
+        query = """
+        INSERT INTO weather_data (
+            ciudad,
+            fechaHora,
+            temperatura,
+            humedad,
+            velocidadViento
+        )
+        VALUES (
+            :ciudad,
+            :fechaHora,
+            :temperatura,
+            :humedad,
+            :velocidadViento
+        )
+        """
+
+
+        with engine.connect() as connection:
+
+            connection.execute(
+                text(query),
+                weather
+            )
+
+            connection.commit()
+
+
+        logger.info(
+            "Datos cargados correctamente en PostgreSQL"
+        )
+
+
+    except Exception as error:
+
+        logger.error(
+            f"Error cargando datos en PostgreSQL: {error}"
+        )
+
+        raise
