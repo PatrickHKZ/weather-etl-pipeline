@@ -64,6 +64,8 @@ try:
     logger.info("Datos cargados correctamente en PostgreSQL")
 
 
+
+
 except Exception as error:
 
     logger.error(f"Error cargando datos en PostgreSQL: {error}")
