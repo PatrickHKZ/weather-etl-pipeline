@@ -1,22 +1,8 @@
 # ETL Weather Pipeline
 
-## Descripción
+Pipeline ETL desarrollado en Python que obtiene información meteorológica desde la API de Open-Meteo, procesa los datos y los almacena en PostgreSQL.
 
-Este proyecto implementa un pipeline ETL (Extract, Transform, Load) desarrollado en Python que obtiene información meteorológica desde la API de Open-Meteo, transforma los datos y los almacena en una base de datos PostgreSQL.
-
-El proyecto fue desarrollado con una arquitectura modular, utilizando Docker para facilitar su despliegue y garantizar un entorno reproducible.
-
----
-
-# Objetivos
-
-- Consumir datos desde una API REST.
-- Procesar y transformar información en formato JSON.
-- Almacenar los datos en PostgreSQL.
-- Aplicar una arquitectura ETL modular.
-- Contenerizar la aplicación utilizando Docker.
-- Gestionar la configuración mediante variables de entorno.
-- Versionar el proyecto con Git y GitHub.
+El proyecto utiliza Docker y Docker Compose para crear un entorno reproducible, evitando la necesidad de instalar manualmente Python, PostgreSQL u otras dependencias.
 
 ---
 
@@ -30,33 +16,227 @@ El proyecto fue desarrollado con una arquitectura modular, utilizando Docker par
 - Requests
 - python-dotenv
 - Git
-- GitHub
+- Github
 
 ---
 
 # Arquitectura del proyecto
 
 ```text
-                    Open-Meteo API
-                           │
-                           ▼
-                    extract.py
-                           │
-                           ▼
-                 data/raw/*.json
-                           │
-                           ▼
-                   transform.py
-                           │
-                           ▼
-        data/processed/weather_processed.json
-                           │
-                           ▼
-                      load.py
-                           │
-                           ▼
-                     PostgreSQL
+                Open-Meteo API
+                      |
+                      v
+                Extract
+                      |
+                      v
+              Datos RAW (JSON)
+                      |
+                      v
+              Transformación
+                      |
+                      v
+          Datos procesados (JSON)
+                      |
+                      v
+                  Load
+                      |
+                      v
+              PostgreSQL Database
 ```
+
+---
+
+# Requisitos previos
+
+Antes de ejecutar el proyecto, instalar:
+
+## Docker Desktop
+
+Debe estar instalado y ejecutándose.
+
+Verificar:
+
+```bash
+docker --version
+docker compose version
+```
+
+## Git
+
+Verificar:
+
+```bash
+git --version
+```
+
+---
+
+# Instalación del proyecto
+
+## 1. Abrir Docker Desktop
+
+Abrir Docker Desktop y esperar hasta que indique:
+
+```text
+Engine running
+```
+
+---
+
+## 2. Clonar el repositorio
+
+Elegir una carpeta donde guardar el proyecto.
+
+Ejemplo:
+
+```text
+C:\Proyectos
+```
+
+Clonar:
+
+```bash
+git clone URL_DEL_REPOSITORIO
+```
+
+Ingresar a la carpeta:
+
+```bash
+cd etl_weather
+```
+
+> Nota: La ruta puede variar dependiendo de dónde se haya descargado el proyecto.
+
+---
+
+# Configuración inicial
+
+## Crear archivo de configuración Docker
+
+Dentro de la carpeta principal del proyecto ejecutar:
+
+Windows CMD:
+
+```cmd
+echo DATABASE_URL=postgresql://postgres:admin@postgres:5432/weather_dw> .env.docker
+```
+
+El archivo debe llamarse exactamente:
+
+```text
+.env.docker
+```
+
+No debe quedar como:
+
+```text
+.env.docker.txt
+```
+
+---
+
+# Ejecución del proyecto
+
+## 1. Construir e iniciar los contenedores
+
+Ejecutar:
+
+```bash
+docker compose up -d --build --wait
+```
+
+La primera ejecución puede tardar varios minutos mientras Docker descarga las imágenes necesarias.
+
+Al finalizar deben existir dos servicios activos:
+
+```text
+weather_postgres
+weather_etl
+```
+
+Verificar:
+
+```bash
+docker ps
+```
+
+---
+
+# Ejecutar pipeline ETL
+
+Ejecutar:
+
+```bash
+docker compose exec etl python src/main.py
+```
+
+El proceso realizará:
+
+1. Extracción desde Open-Meteo.
+2. Transformación de datos.
+3. Carga en PostgreSQL.
+
+---
+
+# Revisar ejecución
+
+Los registros del proceso se almacenan en:
+
+```text
+logs/etl.log
+```
+
+Consultar:
+
+Windows CMD:
+
+```cmd
+type logs\etl.log
+```
+
+Ejecución correcta:
+
+```text
+Datos cargados correctamente en PostgreSQL
+
+PIPELINE FINALIZADO
+```
+
+---
+
+# Consultar resultados
+
+Para visualizar los datos almacenados:
+
+```bash
+docker compose exec postgres psql -U postgres -d weather_dw -c "SELECT * FROM weather_data ORDER BY id DESC;"
+```
+
+El comando mostrará los registros almacenados en la tabla:
+
+```text
+weather_data
+```
+
+---
+
+# Detener el proyecto
+
+Cuando finalice la prueba:
+
+```bash
+docker compose down
+```
+
+Los datos se conservan.
+
+No utilizar:
+
+```bash
+docker compose down -v
+```
+
+ya que elimina los volúmenes y la información almacenada en PostgreSQL.
 
 ---
 
@@ -65,227 +245,78 @@ El proyecto fue desarrollado con una arquitectura modular, utilizando Docker par
 ```text
 etl_weather/
 │
+├── src/
+│   ├── main.py
+│   ├── extract.py
+│   ├── transform.py
+│   ├── load.py
+│   └── logger.py
+│
 ├── data/
 │   ├── raw/
 │   └── processed/
 │
+├── logs/
+│
 ├── docker/
 │   └── init/
 │
-├── logs/
-│
-├── src/
-│   ├── extract.py
-│   ├── transform.py
-│   ├── load.py
-│   ├── main.py
-│   └── logger.py
-│
-├── .env
-├── .env.docker
-├── .dockerignore
-├── .gitignore
-├── docker-compose.yml
 ├── Dockerfile
+├── docker-compose.yml
 ├── requirements.txt
+├── .env.docker
 └── README.md
 ```
 
 ---
 
-# Flujo ETL
+# Solución de problemas comunes
 
-## 1. Extract
+## Docker no inicia
 
-Se realiza una solicitud HTTP a la API de Open-Meteo para obtener información meteorológica de Santiago de Chile.
-
-Los datos obtenidos se almacenan automáticamente dentro de:
+Verificar que Docker Desktop esté abierto y mostrando:
 
 ```text
-data/raw/
+Engine running
 ```
-
-Cada ejecución genera un archivo JSON con marca de tiempo.
 
 ---
 
-## 2. Transform
+## Error de conexión a PostgreSQL
 
-El proceso de transformación:
+Revisar que los contenedores estén activos:
 
-- Lee el archivo RAW más reciente.
-- Valida la estructura de los datos.
-- Convierte la fecha desde UTC a la zona horaria de Chile.
-- Extrae únicamente la información necesaria.
-- Genera un archivo procesado.
+```bash
+docker ps
+```
 
-Resultado:
+Debe aparecer:
 
 ```text
-weather_processed.json
+weather_postgres
+weather_etl
 ```
 
 ---
 
-## 3. Load
+## El proyecto fue detenido anteriormente
 
-La etapa de carga:
-
-- Lee el archivo procesado.
-- Establece conexión con PostgreSQL mediante SQLAlchemy.
-- Inserta la información en la tabla:
-
-```text
-weather_data
-```
-
----
-
-# Ejecución del proyecto
-
-## Clonar repositorio
+Ejecutar:
 
 ```bash
-git clone <URL_DEL_REPOSITORIO>
-cd etl_weather
+docker compose down
 ```
 
----
-
-## Crear entorno virtual
+Luego:
 
 ```bash
-python -m venv venv
+docker compose up -d --build --wait
 ```
-
-Windows
-
-```bash
-venv\Scripts\activate
-```
-
-Linux / Mac
-
-```bash
-source venv/bin/activate
-```
-
----
-
-## Instalar dependencias
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-## Configurar variables de entorno
-
-Crear un archivo:
-
-```text
-.env
-```
-
-Ejemplo:
-
-```env
-DATABASE_URL=postgresql://postgres:admin@localhost:5432/weather_dw_local
-```
-
-Para Docker:
-
-```env
-DATABASE_URL=postgresql://postgres:admin@postgres:5432/weather_dw
-```
-
----
-
-## Ejecutar localmente
-
-```bash
-python src/main.py
-```
-
----
-
-## Ejecutar con Docker
-
-Construir la imagen
-
-```bash
-docker compose build
-```
-
-Levantar servicios
-
-```bash
-docker compose up -d
-```
-
-Ejecutar el pipeline
-
-```bash
-docker exec -it weather_etl python src/main.py
-```
-
----
-
-# Base de datos
-
-Tabla principal:
-
-```text
-weather_data
-```
-
-Campos:
-
-| Campo | Descripción |
-|--------|-------------|
-| ciudad | Ciudad consultada |
-| fechaHora | Fecha y hora local |
-| temperatura | Temperatura actual |
-| humedad | Humedad relativa |
-| velocidadViento | Velocidad del viento |
-
----
-
-# Características implementadas
-
-- Arquitectura ETL modular.
-- Separación de responsabilidades.
-- Variables de entorno para distintos ambientes.
-- Conversión de zona horaria UTC → America/Santiago.
-- Manejo de excepciones.
-- Registro mediante logger.
-- Dockerización completa del proyecto.
-- Persistencia de datos mediante volúmenes Docker.
-- Versionado con Git y GitHub.
-
----
-
-# Aprendizajes obtenidos
-
-Durante el desarrollo de este proyecto se aplicaron conocimientos relacionados con:
-
-- Consumo de APIs REST.
-- Procesamiento de datos JSON.
-- Automatización de procesos ETL.
-- Manejo de PostgreSQL desde Python.
-- SQLAlchemy.
-- Docker y Docker Compose.
-- Variables de entorno.
-- Organización modular de proyectos Python.
-- Control de versiones con Git.
 
 ---
 
 # Autor
 
-**Patrick Hernandez**
+Patrick Hernandez
 
-Ingeniero en Informática
-
-Proyecto desarrollado como parte de mi preparación para roles de Data Analyst y Data Engineering.
+Proyecto desarrollado como parte de preparación para roles de Data Analyst y Data Engineering.
