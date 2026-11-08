@@ -126,13 +126,6 @@ El archivo debe llamarse exactamente:
 ```text
 .env.docker
 ```
-
-No debe quedar como:
-
-```text
-.env.docker.txt
-```
-
 ---
 
 # Ejecución del proyecto
